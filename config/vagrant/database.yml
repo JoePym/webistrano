@@ -1,0 +1,13 @@
+development:
+  adapter: postgresql
+  encoding: unicode
+  pool: 5
+  username: vagrant
+  database: d_webistrano
+
+test:
+  adapter: postgresql
+  encoding: unicode
+  pool: 5
+  username: vagrant
+  database: t_webistrano
