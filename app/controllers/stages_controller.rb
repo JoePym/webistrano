@@ -1,7 +1,8 @@
 class StagesController < ApplicationController
 
   before_filter :load_project
-  
+  before_filter :set_stage, except: %w(new index)
+
   # GET /projects/1/stages.xml
   def index
     @stages = current_project.stages
@@ -13,7 +14,6 @@ class StagesController < ApplicationController
   # GET /projects/1/stages/1
   # GET /projects/1/stages/1.xml
   def show
-    @stage = current_project.stages.find(params[:id])
     @task_list = [['All tasks: ', '']] + @stage.list_tasks.collect{|task| [task[:name], task[:name]]}.sort()
 
     respond_to do |format|
@@ -29,15 +29,13 @@ class StagesController < ApplicationController
 
   # GET /projects/1/stages/1;edit
   def edit
-    @stage = current_project.stages.find(params[:id])
   end
-  
+
   # GET /projects/1/stages/1/tasks
   # GET /projects/1/stages/1/tasks.xml
   def tasks
-    @stage = current_project.stages.find(params[:id])
     @tasks = @stage.list_tasks
-    
+
     respond_to do |format|
       format.html # tasks.rhtml
       format.xml  { render :xml => @tasks.to_xml }
@@ -47,7 +45,6 @@ class StagesController < ApplicationController
   # POST /projects/1/stages
   # POST /projects/1/stages.xml
   def create
-    @stage = current_project.stages.build(params[:stage])
 
     respond_to do |format|
       if @stage.save
@@ -64,8 +61,7 @@ class StagesController < ApplicationController
   # PUT /projects/1/stages/1
   # PUT /projects/1/stages/1.xml
   def update
-    @stage = current_project.stages.find(params[:id])
-    
+
     respond_to do |format|
       if @stage.update_attributes(params[:stage])
         flash[:notice] = 'Stage was successfully updated.'
@@ -81,7 +77,6 @@ class StagesController < ApplicationController
   # DELETE /projects/1/stages/1
   # DELETE /projects/1/stages/1.xml
   def destroy
-    @stage = current_project.stages.find(params[:id])
     @stage.destroy
 
     respond_to do |format|
@@ -90,22 +85,20 @@ class StagesController < ApplicationController
       format.xml  { head :ok }
     end
   end
-  
+
   # GET /projects/1/stages/1/capfile
   # GET /projects/1/stages/1/capifile.xml
   def capfile
-    @stage = current_project.stages.find(params[:id])
 
     respond_to do |format|
       format.html { render :layout => false, :content_type => 'text/plain' }
       format.xml  { render :xml => @stage.to_xml }
     end
   end
-  
+
   # GET | PUT /projects/1/stages/1/recipes
   # GET /projects/1/stages/1/recipes.xml
   def recipes
-    @stage = current_project.stages.find(params[:id])
     if request.put?
       @stage.recipe_ids = params[:stage][:recipe_ids] rescue []
       flash[:notice] = "Stage recipes successfully updated."
@@ -117,5 +110,12 @@ class StagesController < ApplicationController
       end
     end
   end
-  
+
+  protected
+
+  def set_stage
+    @stage = current_project.stages.find(params[:id])
+    redirect_to project_path(current_project) unless current_user.permitted_to_access?(@stage.name)
+  end
+
 end

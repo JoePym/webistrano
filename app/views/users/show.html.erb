@@ -31,7 +31,19 @@
 			</p>
 			<br/>
 			<% if current_user.admin? || current_user == @user %>
-			  <%= link_to 'Edit & change password', edit_user_path(@user), :class => 'arrow_link' %> | 
+        <p>
+          <b> Stages accessible:</b><br/>
+          <% if @user.admin? %>
+           All stages
+          <% else %>
+            <ul>
+              <% @user.privileges.each do |p| %>
+                <li><%= p.name %></li>
+              <% end %>
+            </ul>
+          <% end %>
+        </p>
+			  <%= link_to 'Edit & change password', edit_user_path(@user), :class => 'arrow_link' %> |
 			  <% if @user.disabled? %>
 			    <%= link_to 'Enable', enable_user_path(@user), :confirm => 'Are you sure?', :method => :post, :class => 'arrow_link'  %>
 			  <% else %>

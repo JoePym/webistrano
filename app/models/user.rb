@@ -1,10 +1,13 @@
 require 'digest/sha1'
 class User < ActiveRecord::Base
   has_many :deployments, :dependent => :nullify, :order => 'created_at DESC'
-  
+  has_many :privileges, :dependent => :destroy
+
+  accepts_nested_attributes_for :privileges, :allow_destroy => true
+
   # Virtual attribute for the unencrypted password
   attr_accessor :password
-  
+
   attr_accessible :login, :email, :password, :password_confirmation, :time_zone, :tz
 
   validates_presence_of     :login, :email
@@ -70,53 +73,71 @@ class User < ActiveRecord::Base
     self.remember_token            = nil
     save(false)
   end
-  
+
   def admin?
     self.admin.to_i == 1
   end
-  
+
   def revoke_admin!
     self.admin = 0
     self.save!
   end
-  
+
   def make_admin!
     self.admin = 1
     self.save!
   end
-  
+
   def self.admin_count
     count(:id, :conditions => ['admin = 1 AND disabled IS NULL'])
   end
-  
+
   def recent_deployments(limit=3)
     self.deployments.find(:all, :limit => limit, :order => 'created_at DESC')
   end
-  
+
+  def set_stage_permissions(permissions)
+    permissions = (permissions || []).map(&:downcase)
+    nested_attr_list = self.privileges.map do |p|
+      p_attr = {id: p.id, name: p.name}
+      p_attr["_destroy"] = '1' unless permissions.include?(p.name.downcase)
+      permissions.delete(p.name.downcase)
+      p_attr
+    end
+    permissions.each do |name|
+      nested_attr_list << {"name" => name}
+    end
+    self.privileges_attributes = nested_attr_list
+  end
+
+  def permitted_to_access?(stage)
+    admin || privileges.map(&:name).include?(stage)
+  end
+
   def disabled?
     !self.disabled.blank?
   end
-  
+
   def disable
     self.update_attribute(:disabled, Time.now)
     self.forget_me
   end
-  
+
   def enable
     self.update_attribute(:disabled, nil)
   end
 
   protected
-    # before filter 
+    # before filter
     def encrypt_password
       return if password.blank?
       self.salt = Digest::SHA1.hexdigest("--#{Time.now.to_s}--#{login}--") if new_record?
       self.crypted_password = encrypt(password)
     end
-    
+
     def password_required?
       WebistranoConfig[:authentication_method] != :cas && (crypted_password.blank? || !password.blank?)
     end
 
-    
+
 end
