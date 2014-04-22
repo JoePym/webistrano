@@ -7,21 +7,12 @@
 #
 # See http://unicorn.bogomips.org/Unicorn/Configurator.html for complete
 # documentation.
-APP_PATH = if ['staging', 'production'].include?(ENV['RAILS_ENV'])
-   "/var/www/apps/webistrano"
-else
-  "/vagrant"
-end
-
+current = File.expand_path('../../current', Dir.pwd)
+APP_PATH = File.symlink?(current) ? current : Dir.pwd
 
 # Use at least one worker per core if you're on a dedicated server,
 # more will usually help for _short_ waits on databases/caches.
-if ['staging', 'production'].include?(ENV['RAILS_ENV'])
-  worker_processes 8
-else
-  worker_processes 1
-end
-
+worker_processes ['staging', 'production'].include?(ENV['RAILS_ENV']) ? 8 : 1
 
 # Since Unicorn is never exposed to outside clients, it does not need to
 # run on the standard HTTP port (80), there is no reason to start Unicorn
@@ -48,7 +39,7 @@ pid APP_PATH + "/tmp/pids/unicorn.pid"
 # Additionally, ome applications/frameworks log to stderr or stdout,
 # so prevent them from going to /dev/null when daemonized here:
 stderr_path APP_PATH + "/log/unicorn.stderr.log"
-stdout_path APP_PATH + "/log/unicorn.stderr.log"
+stdout_path APP_PATH + "/log/unicorn.stdout.log"
 
 # combine Ruby 2.0.0dev or REE with "preload_app true" for memory savings
 # http://rubyenterpriseedition.com/faq.html#adapt_apps_for_cow
