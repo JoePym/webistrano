@@ -1,7 +1,7 @@
 class UsersController < ApplicationController
   before_filter :ensure_admin, :only => [:new, :destroy, :create, :enable]
   before_filter :ensure_admin_or_my_entry, :only => [:edit, :update]
-  before_filter :set_stages, :only => [:edit, :update, :new, :create]
+  before_filter :load_stages, :only => [:edit, :update, :new, :create]
 
   # GET /users
   # GET /users.xml
@@ -12,7 +12,7 @@ class UsersController < ApplicationController
   # GET /users/new
   def new
     # render new.rhtml
-    @user = User.new()
+    @user = User.new
   end
 
   # POST /users
@@ -129,7 +129,7 @@ class UsersController < ApplicationController
     end
   end
 
-  def set_stages
+  def load_stages
     @stages = Stage.all(select: "distinct name").map(&:name).map(&:downcase)
   end
 end

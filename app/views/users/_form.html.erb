@@ -38,7 +38,7 @@
         <% @stages.each do |stage| %>
           <li>
             <b><%= stage %></b>
-            <%= check_box_tag "stage_permissions[]", stage, @user.permitted_to_access?(stage), :class => 'noframe' %>
+            <%= check_box_tag "stage_permissions[]", stage, @user.allowed_access_to?(stage), :class => 'noframe' %>
           </li>
         <% end %>
       </ul>

@@ -1,7 +1,7 @@
 class StagesController < ApplicationController
 
   before_filter :load_project
-  before_filter :set_stage, except: %w(new index)
+  before_filter :load_stage, except: %w(new index)
 
   # GET /projects/1/stages.xml
   def index
@@ -113,9 +113,10 @@ class StagesController < ApplicationController
 
   protected
 
-  def set_stage
+  def load_stage
     @stage = current_project.stages.find(params[:id])
-    redirect_to project_path(current_project) unless current_user.permitted_to_access?(@stage.name)
+    redirect_to project_path(current_project), notice: "You do not have permission to access that stage" unless current_user.allowed_access_to?(@stage.name)
+    @stage
   end
 
 end

@@ -4,8 +4,8 @@
     <% if @project.stages.count > 0 %>
       <p><strong>Choose a stage:</strong></p>
       <% for stage in @project.stages %>
-          <% if current_user.permitted_to_access?(stage.name) %>
-            <p><%= link_to h(stage.name), project_stage_path(@project, stage), :class => 'arrow_link'  %></p>
+          <% if current_user.allowed_access_to?(stage.name) %>
+            <p><%= link_to_if current_user.allowed_access_to?(stage.name), h(stage.name), project_stage_path(@project, stage), :class => 'arrow_link'  %></p>
           <% end %>
       <% end %>
     <% else %>

@@ -110,8 +110,8 @@ class User < ActiveRecord::Base
     self.privileges_attributes = nested_attr_list
   end
 
-  def permitted_to_access?(stage)
-    admin || privileges.map(&:name).include?(stage)
+  def allowed_access_to?(stage)
+    admin? || privileges.map(&:name).include?(stage)
   end
 
   def disabled?
