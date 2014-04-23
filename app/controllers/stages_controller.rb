@@ -1,7 +1,7 @@
 class StagesController < ApplicationController
 
   before_filter :load_project
-  before_filter :load_stage, except: %w(new index)
+  before_filter :load_stage, except: %w(create new index)
 
   # GET /projects/1/stages.xml
   def index
@@ -45,6 +45,7 @@ class StagesController < ApplicationController
   # POST /projects/1/stages
   # POST /projects/1/stages.xml
   def create
+    @stage = current_project.stages.build(params[:stage])
 
     respond_to do |format|
       if @stage.save
