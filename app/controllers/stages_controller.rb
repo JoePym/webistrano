@@ -31,6 +31,21 @@ class StagesController < ApplicationController
   def edit
   end
 
+  def lock
+    @stage.lock_stage(current_user)
+    redirect_to project_stage_url(current_project, @stage)
+  end
+
+  def unlock
+    if @stage.locked_by == current_user || current_user.admin?
+      @stage.unlock_stage
+      redirect_to project_stage_url(current_project, @stage)
+    else
+      flash[:notice] = 'You are not the user who locked the stage and so you cannot unlock it.'
+      redirect_to project_stage_url(current_project, @stage)
+    end
+  end
+
   # GET /projects/1/stages/1/tasks
   # GET /projects/1/stages/1/tasks.xml
   def tasks
