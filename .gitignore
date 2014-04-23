@@ -7,3 +7,4 @@ log/*
 *.tmproj
 vendor/bundle
 .rsync_cache
+.vagrant

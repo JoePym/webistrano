@@ -1,0 +1,9 @@
+development:
+  :cas_base_url: https://cas.devexample.tld/
+  :validate_url: https://cas.devexample.tld/validate
+  :logout_url: https://cas.devexample.tld/logout
+
+test:
+  :cas_base_url: https://cas.devexample.tld/
+  :validate_url: https://cas.devexample.tld/validate
+  :logout_url: https://cas.devexample.tld/logout
