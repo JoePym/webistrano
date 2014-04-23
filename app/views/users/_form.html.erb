@@ -31,4 +31,18 @@
     <b>Admin?</b><br />
     <%= check_box 'user', 'admin', :class => 'noframe' %>
   </p>
+  <% unless @user.admin? %>
+    <p>
+      <b>Permitted Deployment Stages</b><br />
+      <ul>
+        <% @stages.each do |stage| %>
+          <li>
+            <b><%= stage %></b>
+            <%= check_box_tag "stage_permissions[]", stage, @user.allowed_access_to?(stage), :class => 'noframe' %>
+          </li>
+        <% end %>
+      </ul>
+    </p>
+  <% end %>
+
 <% end -%>
