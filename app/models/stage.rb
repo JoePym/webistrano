@@ -1,37 +1,38 @@
-class Stage < ActiveRecord::Base  
+class Stage < ActiveRecord::Base
   belongs_to :project
   has_and_belongs_to_many :recipes
   has_many :roles, :dependent => :destroy, :order => "name ASC"
   has_many :hosts, :through => :roles, :uniq => true
   has_many :configuration_parameters, :dependent => :destroy, :class_name => "StageConfiguration", :order => "name ASC"
   has_many :deployments, :dependent => :destroy, :order => "created_at DESC"
-  belongs_to :locking_deployment, :class_name => 'Deployment', :foreign_key => :locked_by_deployment_id 
-  
+  belongs_to :locked_by, :class_name => "User"
+  belongs_to :locking_deployment, :class_name => 'Deployment', :foreign_key => :locked_by_deployment_id
+
   validates_uniqueness_of :name, :scope => :project_id
   validates_length_of :name, :maximum => 250
   validates_presence_of :project, :name
   validates_inclusion_of :locked, :in => [0,1]
-  
+
   attr_accessible :name, :alert_emails
 
   # fake attr (Hash) that hold info why deployment is not possible
   # (think model.errors lite)
   attr_accessor :deployment_problems
-  
+
   EMAIL_BASE_REGEX = '([^@\s\,\<\>\?\&\;\:]+)@((?:[\-a-z0-9]+\.)+[a-z]{2,})'
   EMAIL_REGEX = /^#{EMAIL_BASE_REGEX}$/i
-    
+
   def validate
     unless self.alert_emails.blank?
       self.alert_emails.split(" ").each do |email|
         unless email.match(EMAIL_REGEX)
-          self.errors.add('alert_emails', 'format is not valid, please seperate email addresses by space') 
+          self.errors.add('alert_emails', 'format is not valid, please seperate email addresses by space')
           break
         end
       end
     end
   end
-  
+
   # wrapper around alert_emails, returns an array of email addresses
   def emails
     if self.alert_emails.blank?
