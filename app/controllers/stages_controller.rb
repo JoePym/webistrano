@@ -32,19 +32,19 @@ class StagesController < ApplicationController
     @stage = current_project.stages.find(params[:id])
   end
 
-  def freeze
+  def lock
     @stage = current_project.stages.find(params[:id])
     @stage.lock_stage(current_user)
     redirect_to project_stage_url(current_project, @stage)
   end
 
-  def unfreeze
+  def unlock
     @stage = current_project.stages.find(params[:id])
-    if @stage.frozen_by == current_user || current_user.admin?
+    if @stage.locked_by == current_user || current_user.admin?
       @stage.unlock_stage
       redirect_to project_stage_url(current_project, @stage)
     else
-      flash[:notice] = 'You are not the user who locked the stage and so you cannot unfreeze it.'
+      flash[:notice] = 'You are not the user who locked the stage and so you cannot unlock it.'
       redirect_to project_stage_url(current_project, @stage)
     end
   end

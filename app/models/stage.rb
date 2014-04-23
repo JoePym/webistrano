@@ -58,15 +58,17 @@ class Stage < ActiveRecord::Base
     end
   end
 
+  def locked?
+    locked_by.present?
+  end
+
   def lock_stage(user)
-    self.is_frozen = true
-    self.frozen_by = user
+    self.locked_by = user
     self.save
   end
 
   def unlock_stage
-    self.is_frozen = false
-    self.frozen_by = nil
+    self.locked_by = nil
     self.save
   end
 
@@ -84,7 +86,7 @@ class Stage < ActiveRecord::Base
   # essential variables are set
   def deployment_possible?
     # check roles and vars
-    not_frozen?
+    not_locked?
     needed_roles_present?
     needed_vars_set?
 
@@ -108,9 +110,9 @@ class Stage < ActiveRecord::Base
     end
   end
 
-  def not_frozen?
-    if self.is_frozen?
-      self.add_deployment_problem(:frozen, "This stage is currently frozen by #{frozen_by.login}")
+  def not_locked?
+    if self.locked?
+      self.add_deployment_problem(:locked, "This stage is currently locked by #{locked_by.login}")
     end
   end
 

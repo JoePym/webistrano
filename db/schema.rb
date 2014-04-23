@@ -112,10 +112,10 @@ ActiveRecord::Schema.define(:version => 20140423134138) do
     t.text     "alert_emails"
     t.integer  "locked_by_deployment_id"
     t.integer  "locked",                  :default => 0
-    t.boolean  "is_frozen",               :default => false, :null => false
-    t.integer  "frozen_by_id"
+    t.integer  "locked_by_id"
   end
 
+  add_index "stages", ["locked_by_id"], :name => "index_stages_on_locked_by_id"
   add_index "stages", ["project_id"], :name => "index_stages_on_project_id"
 
   create_table "users", :force => true do |t|

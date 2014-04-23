@@ -22,7 +22,7 @@ ActionController::Routing::Routes.draw do |map|
   map.resources :projects, :member => {:dashboard => :get} do |projects|
     projects.resources :project_configurations
 
-    projects.resources :stages, :member => {:capfile => :get, :recipes => :any, :tasks => :get, :freeze => :post, :unfreeze => :post} do |stages|
+    projects.resources :stages, :member => {:capfile => :get, :recipes => :any, :tasks => :get, :lock => :post, :unlock => :post} do |stages|
       stages.resources :stage_configurations
       stages.resources :roles
       stages.resources :deployments, :collection => {:latest => :get}, :member => {:cancel => :post}
