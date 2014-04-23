@@ -31,13 +31,30 @@ class StagesController < ApplicationController
   def edit
     @stage = current_project.stages.find(params[:id])
   end
-  
+
+  def freeze
+    @stage = current_project.stages.find(params[:id])
+    @stage.lock_stage(current_user)
+    redirect_to project_stage_url(current_project, @stage)
+  end
+
+  def unfreeze
+    @stage = current_project.stages.find(params[:id])
+    if @stage.frozen_by == current_user || current_user.admin?
+      @stage.unlock_stage
+      redirect_to project_stage_url(current_project, @stage)
+    else
+      flash[:notice] = 'You are not the user who locked the stage and so you cannot unfreeze it.'
+      redirect_to project_stage_url(current_project, @stage)
+    end
+  end
+
   # GET /projects/1/stages/1/tasks
   # GET /projects/1/stages/1/tasks.xml
   def tasks
     @stage = current_project.stages.find(params[:id])
     @tasks = @stage.list_tasks
-    
+
     respond_to do |format|
       format.html # tasks.rhtml
       format.xml  { render :xml => @tasks.to_xml }

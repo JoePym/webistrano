@@ -9,33 +9,33 @@ ActionController::Routing::Routes.draw do |map|
   # map.purchase 'products/:id/purchase', :controller => 'catalog', :action => 'purchase'
   # This route can be invoked with purchase_url(:id => product.id)
 
-  # You can have the root of your site routed by hooking up '' 
+  # You can have the root of your site routed by hooking up ''
   # -- just remember to delete public/index.html.
   map.home '', :controller => "projects", :action => 'dashboard'
 
   # Allow downloading Web Service WSDL as a file with an extension
   # instead of a file named 'wsdl'
   map.connect ':controller/service.wsdl', :action => 'wsdl'
-  
+
   map.resources :hosts
   map.resources :recipes, :collection => {:preview => :get}
   map.resources :projects, :member => {:dashboard => :get} do |projects|
     projects.resources :project_configurations
-    
-    projects.resources :stages, :member => {:capfile => :get, :recipes => :any, :tasks => :get} do |stages|
+
+    projects.resources :stages, :member => {:capfile => :get, :recipes => :any, :tasks => :get, :freeze => :post, :unfreeze => :post} do |stages|
       stages.resources :stage_configurations
       stages.resources :roles
       stages.resources :deployments, :collection => {:latest => :get}, :member => {:cancel => :post}
     end
   end
-  
+
   # RESTful auth
   map.resources :users,:member => {:deployments => :get, :enable => :post}
   map.resources :sessions, :collection => {:version => :get}
   map.signup '/signup', :controller => 'users', :action => 'new'
   map.login  '/login', :controller => 'sessions', :action => 'new'
   map.logout '/logout', :controller => 'sessions', :action => 'destroy'
-  
+
   # stylesheet
   map.stylesheet '/stylesheets/application.css', :controller => 'stylesheets', :action => 'application'
 

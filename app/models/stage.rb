@@ -57,35 +57,48 @@ class Stage < ActiveRecord::Base
       effec_conf.delete_if{|x| x.name.to_s != key.to_s}.first
     end
   end
-  
+
+  def lock_stage(user)
+    self.is_frozen = true
+    self.frozen_by = user
+    self.save
+  end
+
+  def unlock_stage
+    self.is_frozen = false
+    self.frozen_by = nil
+    self.save
+  end
+
   # returns @deployment_problems, but before sets it through `deployment_possible?`
   def deployment_problems
     @deployment_problems = @deployment_problems || {}
-    
+
     deployment_possible?
-    
+
     @deployment_problems
   end
-  
+
   # tells wether a deployment is possible/allowed
   # by checking that all needed roles are present and some
   # essential variables are set
   def deployment_possible?
     # check roles and vars
+    not_frozen?
     needed_roles_present?
     needed_vars_set?
-    
+
     # when there are not deployment_problems, deployment is possible
     @deployment_problems.blank?
   end
-  
+
   def needed_roles_present?
     # for now just check if there are any roles
-    if self.roles.empty? 
+    if self.roles.empty?
       self.add_deployment_problem(:roles, 'no hosts are present. You need at least one host.')
     end
   end
-  
+
   def needed_vars_set?
     needed_vars = [:repository, :application]
     needed_vars.each do |key|
@@ -94,30 +107,36 @@ class Stage < ActiveRecord::Base
       end
     end
   end
-  
+
+  def not_frozen?
+    if self.is_frozen?
+      self.add_deployment_problem(:frozen, "This stage is currently frozen by #{frozen_by.login}")
+    end
+  end
+
   # returns an array of all effective configurations that need a prompt
   def prompt_configurations
     res = effective_configuration.delete_if do |config|
       !config.prompt?
     end
   end
-  
+
   # returns an array of all effective configurations that do not need a prompt
   def non_prompt_configurations
     res = effective_configuration.delete_if do |config|
       config.prompt?
     end
   end
-  
+
   def recent_deployments(limit=3)
     self.deployments.find(:all, :limit => limit, :order => 'deployments.created_at DESC')
   end
-  
+
   # returns a better form of the stage name for use inside Capistrano recipes
   def webistrano_stage_name
     self.name.underscore.gsub(/[^a-zA-Z0-9\-\_]/, '_')
   end
-  
+
   # returns a lists of all availabe tasks for this stage
   def list_tasks
     d = Deployment.new

@@ -4,12 +4,19 @@
    <p><%= link_to 'Deploy', new_project_stage_deployment_path(current_project, @stage) + '?task=deploy', :class => 'arrow_link' %></p>
    <p><%= link_to 'Deploy and migrate', new_project_stage_deployment_path(current_project, @stage) + '?task=deploy:migrations', :class => 'arrow_link' %></p>
    <p><%= link_to 'Restart app servers', new_project_stage_deployment_path(current_project, @stage) + '?task=deploy:restart', :class => 'arrow_link' %></p>
+   <% if @stage.is_frozen? %>
+    <% if @stage.frozen_by == current_user || admin %>
+      <p><%= link_to 'Unfreeze', unfreeze_project_stage_path(current_project, @stage), :class => 'arrow_link', :method => :post %></p>
+    <% end %>
+   <% else %>
+     <p><%= link_to 'Freeze', freeze_project_stage_path(current_project, @stage), :class => 'arrow_link', :method => :post %></p>
+   <% end %>
    <p><%= link_to 'Setup', new_project_stage_deployment_path(current_project, @stage) + '?task=deploy:setup', :class => 'arrow_link' %></p>
    <p>
      <%= select_tag('task', options_for_select(@task_list)) %>
    </p>
    <p>
-     <%= link_to 'Execute', new_project_stage_deployment_path(current_project, @stage), :class => 'arrow_link', 
+     <%= link_to 'Execute', new_project_stage_deployment_path(current_project, @stage), :class => 'arrow_link',
          :onclick => "location.href='#{new_project_stage_deployment_path(current_project, @stage)}?task=' + $F('task'); return false" %> |
      <%= link_to 'Info', tasks_project_stage_path(current_project, @stage), :class => 'arrow_link',
          :onclick => "location.href='#{tasks_project_stage_path(current_project, @stage)}#' + $F('task'); return false" %>
@@ -29,6 +36,12 @@
 		  <b>Project:</b>
 		  <%= link_to h(@stage.project.name), project_url(current_project) %>
 		</p>
+    <% if @stage.is_frozen %>
+      <p>
+        <b>Frozen By</b>
+        <%=h @stage.frozen_by.login %>
+      </p>
+    <% end %>
 		<p>
 		  <b>Alert on deploy:</b>
 		  <%=h @stage.alert_emails %>
