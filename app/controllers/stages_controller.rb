@@ -1,7 +1,7 @@
 class StagesController < ApplicationController
 
   before_filter :load_project
-  before_filter :load_stage, :except => %w(create new index)
+  before_filter :load_stage, :except => [:create, :new, :index]
 
   # GET /projects/1/stages.xml
   def index
