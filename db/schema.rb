@@ -9,7 +9,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20140423134138) do
+ActiveRecord::Schema.define(:version => 20140424182851) do
 
   create_table "configuration_parameters", :force => true do |t|
     t.string   "name"
@@ -20,7 +20,19 @@ ActiveRecord::Schema.define(:version => 20140423134138) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.integer  "prompt_on_deploy", :default => 0
+    t.boolean  "warn",             :default => false, :null => false
   end
+
+  create_table "configuration_records", :force => true do |t|
+    t.integer  "deployment_id"
+    t.integer  "configuration_parameter_id"
+    t.string   "value"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "configuration_records", ["configuration_parameter_id"], :name => "index_configuration_records_on_configuration_parameter_id"
+  add_index "configuration_records", ["deployment_id"], :name => "index_configuration_records_on_deployment_id"
 
   create_table "deployments", :force => true do |t|
     t.string   "task"

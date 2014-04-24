@@ -2,21 +2,23 @@ class Deployment < ActiveRecord::Base
   belongs_to :stage
   belongs_to :user
   has_and_belongs_to_many :roles
-  
+
+  has_many :configuration_records, :dependent => :destroy
   validates_presence_of :task, :stage, :user
   validates_length_of :task, :maximum => 250
-  
+
   serialize :excluded_host_ids
-  
+
   attr_accessible :task, :prompt_config, :description, :excluded_host_ids, :override_locking
-    
+
   # given configuration hash on create in order to satisfy prompt configurations
   attr_accessor :prompt_config
-  
+
   attr_accessor :override_locking
-  
+
   after_create :add_stage_roles
-  
+  after_create :add_configuration_records
+
   DEPLOY_TASKS    = ['deploy', 'deploy:default', 'deploy:migrations']
   SETUP_TASKS     = ['deploy:setup']
   STATUS_CANCELED = "canceled"
@@ -54,55 +56,63 @@ class Deployment < ActiveRecord::Base
       stage.lock_with(d)
     end
     true
-  rescue => e
-    RAILS_DEFAULT_LOGGER.debug "DEPLOYMENT: could not fire deployment: #{e.inspect} #{e.backtrace.join("\n")}"
-    false
+  # rescue => e
+  #   RAILS_DEFAULT_LOGGER.debug "DEPLOYMENT: could not fire deployment: #{e.inspect} #{e.backtrace.join("\n")}"
+  #   false
   end
-  
+
   def override_locking?
     @override_locking.to_i == 1
   end
-  
+
   def prompt_config
     @prompt_config = @prompt_config || {}
     @prompt_config
   end
-  
+
   def effective_and_prompt_config
     @effective_and_prompt_config = @effective_and_prompt_config || self.stage.effective_configuration.collect do |conf|
       if prompt_config.has_key?(conf.name)
-        conf.value = prompt_config[conf.name] 
+        conf.value = prompt_config[conf.name]
       end
       conf
     end
   end
-  
+
   def add_stage_roles
     self.stage.roles.each do |role|
       self.roles << role
     end
   end
-  
+
+  def add_configuration_records
+    effective_and_prompt_config.each do |config|
+      if config.respond_to?(:prompt?) && config.prompt?
+        self.configuration_records.create(:configuration_parameter => config, :value => config.value)
+      end
+    end
+  end
+
   def completed?
     !self.completed_at.blank?
   end
-  
+
   def success?
     self.status == STATUS_SUCCESS
   end
-  
+
   def failed?
     self.status == STATUS_FAILED
   end
-  
+
   def canceled?
     self.status == STATUS_CANCELED
   end
-  
+
   def running?
     self.status == STATUS_RUNNING
   end
-  
+
   def status_in_html
     "<span class='deployment_status_#{self.status.gsub(/ /, '_')}'>#{self.status}</span>"
   end
