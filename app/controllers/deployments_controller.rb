@@ -44,11 +44,16 @@ class DeploymentsController < ApplicationController
   # POST /projects/1/stages/1/deployments
   # POST /projects/1/stages/1/deployments.xml
   def create
+    if warning_required?
+      session[:deployment] = params[:deployment]
+      render "warning" and return
+    end
+
     @deployment = Deployment.new
-    
+
     respond_to do |format|
       if populate_deployment_and_fire
-        
+
         @deployment.deploy_in_background!
 
         format.html { redirect_to project_stage_deployment_url(@project, @stage, @deployment)}
@@ -121,16 +126,34 @@ class DeploymentsController < ApplicationController
       @auto_scroll = false
     end
   end
-  
+
   # sets @deployment
   def populate_deployment_and_fire
+    deployment_params = params[:deployment] || session[:deployment]
+    session[:deployment] = nil
     return Deployment.lock_and_fire do |deployment|
       @deployment = deployment
-      @deployment.attributes = params[:deployment]
-      @deployment.prompt_config = params[:deployment][:prompt_config] rescue {}
+      @deployment.attributes = deployment_params
+      @deployment.prompt_config = deployment_params[:prompt_config] rescue {}
       @deployment.stage = current_stage
       @deployment.user = current_user
     end
   end
-  
+
+  def warning_required?
+    return false if params[:warned]
+    @changed_values = {}
+    newest_deployment = current_stage.deployments.find(:first, :order => 'deployments.created_at DESC', :include => [:configuration_records])
+    current_stage.configuration_parameters.find_all_by_warn(true).each do |cp|
+      newest_deployment.configuration_records.each do |cr|
+        if cr.configuration_parameter == cp
+          current_value = params[:deployment][:prompt_config][cp.name] rescue ""
+          @changed_values[cp.name] = [cr.value, current_value] if cr.value != current_value
+        end
+      end
+    end
+    @changed_values.any?
+  end
+
+
 end
