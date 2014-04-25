@@ -130,6 +130,7 @@ class DeploymentsController < ApplicationController
   # sets @deployment
   def populate_deployment_and_fire
     deployment_params = params[:deployment] || session[:deployment]
+    session[:deployment] = nil
     return Deployment.lock_and_fire do |deployment|
       @deployment = deployment
       @deployment.attributes = deployment_params
