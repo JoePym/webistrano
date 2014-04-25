@@ -138,7 +138,6 @@ class DeploymentsController < ApplicationController
       @deployment.stage = current_stage
       @deployment.user = current_user
     end
-    session[:deployment] = nil
   end
 
   def warning_required?
