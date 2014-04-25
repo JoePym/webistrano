@@ -4,7 +4,7 @@
    <p><%= link_to 'Deploy', new_project_stage_deployment_path(current_project, @stage) + '?task=deploy', :class => 'arrow_link' %></p>
    <p><%= link_to 'Deploy and migrate', new_project_stage_deployment_path(current_project, @stage) + '?task=deploy:migrations', :class => 'arrow_link' %></p>
    <p><%= link_to 'Restart app servers', new_project_stage_deployment_path(current_project, @stage) + '?task=deploy:restart', :class => 'arrow_link' %></p>
-   <% if @stage.locked? %>
+   <% if @stage.locked_by_user? %>
     <% if @stage.locked_by == current_user || current_user.admin? %>
       <p><%= link_to 'Unlock', unlock_project_stage_path(current_project, @stage), :class => 'arrow_link', :method => :post %></p>
     <% end %>
@@ -36,9 +36,9 @@
 		  <b>Project:</b>
 		  <%= link_to h(@stage.project.name), project_url(current_project) %>
 		</p>
-    <% if @stage.locked? %>
+    <% if @stage.locked_by_user? %>
       <p>
-        <b>Locked By</b>
+        <b>Locked by:</b>
         <%=h @stage.locked_by.login %>
       </p>
     <% end %>

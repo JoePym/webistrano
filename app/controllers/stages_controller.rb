@@ -32,13 +32,13 @@ class StagesController < ApplicationController
   end
 
   def lock
-    @stage.lock_stage(current_user)
+    @stage.lock_stage_for_deploy(current_user)
     redirect_to project_stage_url(current_project, @stage)
   end
 
   def unlock
     if @stage.locked_by == current_user || current_user.admin?
-      @stage.unlock_stage
+      @stage.unlock_stage_for_deploy
       redirect_to project_stage_url(current_project, @stage)
     else
       flash[:notice] = 'You are not the user who locked the stage and so you cannot unlock it.'

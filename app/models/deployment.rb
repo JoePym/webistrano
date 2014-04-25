@@ -26,25 +26,25 @@ class Deployment < ActiveRecord::Base
   STATUS_SUCCESS  = "success"
   STATUS_RUNNING  = "running"
   STATUS_VALUES   = [STATUS_SUCCESS, STATUS_FAILED, STATUS_CANCELED, STATUS_RUNNING]
-  
+
   validates_inclusion_of :status, :in => STATUS_VALUES
-    
+
   # check (on on creation ) that the stage is ready
   # his has to done only on creation as later DB logging MUST always work
   def validate_on_create
     unless self.stage.blank?
       errors.add('stage', 'is not ready to deploy') unless self.stage.deployment_possible?
-      
+
       self.stage.prompt_configurations.each do |conf|
         errors.add('base', "Please fill out the parameter '#{conf.name}'") unless !prompt_config.blank? && !prompt_config[conf.name.to_sym].blank?
       end
-      
+
       errors.add('lock', 'The stage is locked') if self.stage.locked? && !self.override_locking
-      
+
       ensure_not_all_hosts_excluded
     end
   end
-  
+
   def self.lock_and_fire(&block)
     transaction do
       d = Deployment.new
@@ -121,36 +121,36 @@ class Deployment < ActiveRecord::Base
     save_completed_status!(STATUS_FAILED)
     notify_per_mail
   end
-  
+
   def complete_successfully!
     save_completed_status!(STATUS_SUCCESS)
     notify_per_mail
   end
-  
+
   def complete_canceled!
     save_completed_status!(STATUS_CANCELED)
     notify_per_mail
   end
-  
+
   # deploy through Webistrano::Deployer in background (== other process)
   # TODO - at the moment `Unix &` hack
-  def deploy_in_background! 
-    unless RAILS_ENV == 'test'   
+  def deploy_in_background!
+    unless RAILS_ENV == 'test'
       RAILS_DEFAULT_LOGGER.info "Calling other ruby process in the background in order to deploy deployment #{self.id} (stage #{self.stage.id}/#{self.stage.name})"
       system("sh -c \"cd #{RAILS_ROOT} && ruby script/runner -e #{RAILS_ENV} ' deployment = Deployment.find(#{self.id}); deployment.prompt_config = #{self.prompt_config.inspect.gsub('"', '\"')} ; Webistrano::Deployer.new(deployment).invoke_task! ' >> #{RAILS_ROOT}/log/#{RAILS_ENV}.log 2>&1\" &")
     end
   end
-  
+
   # returns an unsaved, new deployment with the same task/stage/description
   def repeat
     Deployment.new.tap do |d|
       d.stage = self.stage
       d.task = self.task
-      d.description = "Repetition of deployment #{self.id}: \n" 
-      d.description += self.description
+      d.description = "Repetition of deployment #{self.id}: \n"
+      d.description += self.description.to_s
     end
   end
-  
+
   # returns a list of hosts that this deployment
   # will deploy to. This computed out of the list
   # of given roles and the excluded hosts

@@ -5,7 +5,7 @@ class Stage < ActiveRecord::Base
   has_many :hosts, :through => :roles, :uniq => true
   has_many :configuration_parameters, :dependent => :destroy, :class_name => "StageConfiguration", :order => "name ASC"
   has_many :deployments, :dependent => :destroy, :order => "created_at DESC"
-  belongs_to :locked_by, :class_name => "User"
+  belongs_to :locked_by, :class_name => "User", :foreign_key => :locked_by_user_id
   belongs_to :locking_deployment, :class_name => 'Deployment', :foreign_key => :locked_by_deployment_id
 
   validates_uniqueness_of :name, :scope => :project_id
@@ -59,16 +59,16 @@ class Stage < ActiveRecord::Base
     end
   end
 
-  def locked?
+  def locked_by_user?
     locked_by.present?
   end
 
-  def lock_stage(user)
+  def lock_stage_for_deploy(user)
     self.locked_by = user
     self.save
   end
 
-  def unlock_stage
+  def unlock_stage_for_deploy
     self.locked_by = nil
     self.save
   end
@@ -87,7 +87,7 @@ class Stage < ActiveRecord::Base
   # essential variables are set
   def deployment_possible?
     # check roles and vars
-    not_locked?
+    not_locked_by_user?
     needed_roles_present?
     needed_vars_set?
 
@@ -111,8 +111,8 @@ class Stage < ActiveRecord::Base
     end
   end
 
-  def not_locked?
-    if self.locked?
+  def not_locked_by_user?
+    if self.locked_by_user?
       self.add_deployment_problem(:locked, "This stage is currently locked by #{locked_by.login}")
     end
   end
