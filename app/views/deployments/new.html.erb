@@ -1,4 +1,4 @@
-<% if current_stage.locked? %>
+<% if current_stage.locked_by_user? %>
   <% content_for(:flash_content) do %>
     <%= locking_flash( render :partial => 'lock_info', :locals => {:stage => current_stage, :deployment => @deployment}) %>
   <% end %>
