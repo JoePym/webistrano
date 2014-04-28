@@ -144,7 +144,7 @@ class DeploymentsController < ApplicationController
     return false if params[:warned]
     @changed_values = {}
     newest_deployment = current_stage.deployments.find(:first, :order => 'deployments.created_at DESC', :include => [:configuration_records])
-    current_stage.configuration_parameters.find_all_by_warn(true).each do |cp|
+    current_stage.configuration_parameters.find_all_by_warn_on_change(true).each do |cp|
       newest_deployment.configuration_records.each do |cr|
         if cr.configuration_parameter == cp
           current_value = params[:deployment][:prompt_config][cp.name] rescue ""

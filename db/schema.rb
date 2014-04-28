@@ -9,7 +9,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20140425190453) do
+ActiveRecord::Schema.define(:version => 20140428135842) do
 
   create_table "configuration_parameters", :force => true do |t|
     t.string   "name"
@@ -20,7 +20,7 @@ ActiveRecord::Schema.define(:version => 20140425190453) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.integer  "prompt_on_deploy", :default => 0
-    t.boolean  "warn",             :default => false, :null => false
+    t.integer  "warn_on_change",   :default => 0
   end
 
   create_table "configuration_records", :force => true do |t|
